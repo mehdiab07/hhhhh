@@ -1,5 +1,11 @@
-import time
+import discord
+from discord.ext import commands
 import configparser
+
+intents = discord.Intents.default()
+intents.members = True
+
+bot = commands.Bot(command_prefix='!', intents=intents)
 
 # Function to read configuration settings from a file
 def read_config():
@@ -7,17 +13,21 @@ def read_config():
     config.read('config.ini')
     return config['WelcomeBot']
 
-# Function to send a welcome message
-def send_welcome_message():
+@bot.event
+async def on_ready():
+    print(f'Logged in as {bot.user.name}')
+    print('------')
+
+@bot.event
+async def on_member_join(member):
     config = read_config()
-    welcome_message = config.get('welcome_message', 'Welcome to the Coding Bot!')
-    delay = config.getint('delay', 2)
+    welcome_channel_id = int(config.get('welcome_channel_id', ''))
+    welcome_message = config.get('welcome_message', 'Welcome to the server, {member.mention}!')
 
-    print(welcome_message)
-    print("I'm here to help you with your coding tasks.")
-    print("Feel free to ask me any questions or request assistance.")
+    if welcome_channel_id:
+        welcome_channel = member.guild.get_channel(welcome_channel_id)
+        if welcome_channel:
+            await welcome_channel.send(welcome_message.format(member=member))
 
-    time.sleep(delay)
+bot.run('YOUR_BOT_TOKEN')
 
-if __name__ == "__main__":
-    send_welcome_message()
